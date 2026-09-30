@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="id">
+<!--
+  CARA MENGEDIT FILE INI
+  1. Isi slide: setiap slide adalah satu blok <section class="slide"> di dalam <main id="deck">.
+     Tambah slide = salin satu blok section lalu ubah isinya. Hapus slide = hapus blok section-nya.
+     Nomor halaman dan progress dihitung otomatis. Slide pertama memakai class "slide title".
+  2. Data 10 paket: ada di bagian <script>, variabel P (cari "var P=["). Ubah, tambah, atau hapus baris di sana;
+     tabel, total, persentase, dan grafik batang ikut menyesuaikan otomatis.
+     TOTAL_ALL adalah pagu seluruh paket Bina Marga (untuk persentase di slide Cakupan).
+  3. Jadwal mini kompetisi (slide 7 sampai 10) dihitung otomatis dari data P (kolom mulai dan kelas),
+     daftar TAHAP (durasi hari kerja per tahapan untuk paket reguler dan besar), dan daftar LIBUR.
+     Cari "var TAHAP=[" dan "var LIBUR=[" di bagian <script>. Ubah durasi atau tanggal, semua tabel dan Gantt ikut bergeser.
+     Slide kelompok memakai atribut data-mulai="YYYY-MM-DD"; tambah kelompok baru dengan menyalin slide itu dan mengganti tanggalnya.
+     Paket tambahan dari sheet Perubahan ada di variabel P2 (slide 13 sampai 15), dengan cara edit yang sama.
+  4. Warna dan tema: ubah variabel di blok :root di dalam <style>.
+  5. Font memakai Google Fonts. Tanpa internet, tampilan tetap jalan dengan font bawaan perangkat.
+  6. Cetak ke PDF: buka di browser, tekan Ctrl+P, pilih Landscape. Setiap slide menjadi satu halaman.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paparan Paket Bina Marga 2026 untuk Pendampingan e-Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eceeeb; --surface:#f8f9f7; --surface2:#dfe3de; --ink:#1c2128; --muted:#55606b; --line:#c9cfc8;
+  --primary:#0d5c45; --primary-ink:#ffffff; --accent:#f2c200; --accent-ink:#4a3a00; --accent-soft:#fbeaa0;
+  --fprep:#a7b3ab; --asphalt:#1c2128; --on-asphalt:#f2f1ea;
+  --head:'Barlow Condensed','Arial Narrow','Roboto Condensed',system-ui,sans-serif;
+  --body:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#14181d; --surface:#1b2129; --surface2:#262e38; --ink:#e9e8e1; --muted:#98a3ae; --line:#323c48;
+    --primary:#4fbf98; --primary-ink:#0b2a20; --accent:#f2c200; --accent-ink:#f5dd85; --accent-soft:#3a3210; --fprep:#5d6b75;
+  }
+}
+:root[data-theme="dark"]{
+  --fprep:#5d6b75; --bg:#14181d; --surface:#1b2129; --surface2:#262e38; --ink:#e9e8e1; --muted:#98a3ae; --line:#323c48;
+  --primary:#4fbf98; --primary-ink:#0b2a20; --accent:#f2c200; --accent-ink:#f5dd85; --accent-soft:#3a3210;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);
+  font-family:var(--body);font-size:17px;line-height:1.55;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.deck{position:relative;flex:1;min-height:0;overflow:hidden}
+.slide{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;
+  padding:clamp(20px,4.5vh,48px) clamp(18px,5vw,72px);
+  opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s}
+.slide.active{opacity:1;visibility:visible}
+.inner{margin:auto;width:100%;max-width:1080px}
+
+h1,h2,h3{font-family:var(--head);font-weight:700;line-height:1.05;margin:0}
+h2{font-size:clamp(1.9rem,4.4vw,3rem);color:var(--primary);letter-spacing:.005em}
+h3{font-size:1.35rem;font-weight:600}
+p{margin:0 0 .8em}
+.lead{font-size:1.15rem;max-width:62ch}
+.muted{color:var(--muted)}
+.rule{height:6px;width:84px;background:var(--accent);margin:14px 0 22px;border-radius:1px}
+
+/* judul */
+.slide.title{background:var(--asphalt);color:var(--on-asphalt)}
+.slide.title h1{font-size:clamp(2.4rem,6.6vw,5rem);max-width:17ch}
+.slide.title .sub{font-size:clamp(1.1rem,2.2vw,1.5rem);margin-top:22px;max-width:44ch;color:#c9cdc6}
+.slide.title .who{margin-top:42px;font-size:.98rem;color:#a9afa8;max-width:52ch}
+.slide.title .who b{color:var(--on-asphalt);font-weight:600}
+.roadline{height:8px;margin:34px 0 0;width:100%;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 46px,transparent 46px 88px)}
+.draft{display:inline-block;margin-top:26px;padding:4px 12px;border:2px solid var(--accent);color:var(--accent);
+  font-family:var(--head);font-weight:600;font-size:1.05rem;border-radius:3px}
+
+/* angka ringkas */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:28px;margin:8px 0 28px}
+.stat{border-top:4px solid var(--primary);padding-top:10px}
+.stat .n{font-family:var(--head);font-weight:700;font-size:clamp(2.6rem,6vw,4rem);line-height:1;color:var(--ink)}
+.stat .t{color:var(--muted);margin-top:6px}
+.note{border-left:5px solid var(--accent);background:var(--surface);padding:14px 18px;max-width:70ch}
+.note p:last-child{margin:0}
+
+/* daftar poin */
+.points{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.points li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:baseline;
+  padding:12px 0;border-bottom:1px solid var(--line)}
+.points .tag{font-family:var(--head);font-weight:700;font-size:1.05rem;color:var(--primary-ink);background:var(--primary);
+  padding:1px 10px;border-radius:3px;white-space:nowrap}
+.points .tag.pasal{background:var(--surface2);color:var(--ink)}
+.two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(24px,4vw,56px);align-items:start}
+
+/* tabel paket */
+.tablewrap{margin-top:16px}
+table.pk{width:100%;border-collapse:collapse;font-size:.95rem}
+table.pk th{font-family:var(--head);font-weight:600;font-size:1.05rem;text-align:left;padding:8px 10px;
+  border-bottom:3px solid var(--primary);white-space:nowrap}
+table.pk td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.pk td.num,table.pk th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.pk tr.total td{font-weight:600;border-bottom:0;border-top:3px solid var(--primary);background:var(--surface)}
+.plate{display:inline-block;min-width:2.6em;text-align:center;padding:1px 7px;border-radius:4px;
+  background:var(--primary);color:var(--primary-ink);font-family:var(--head);font-weight:700;letter-spacing:.02em}
+.plate.none{background:var(--surface2);color:var(--muted)}
+.chip{display:inline-block;padding:0 8px;border-radius:3px;background:var(--accent-soft);color:var(--accent-ink);font-size:.85rem;font-weight:500;white-space:nowrap}
+
+/* batang */
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:34px;margin-top:22px}
+.group h3{margin-bottom:12px;color:var(--ink)}
+.brow{display:grid;grid-template-columns:1fr auto;gap:2px 12px;margin-bottom:14px;font-size:.95rem}
+.brow .val{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+.bar{grid-column:1 / -1;height:12px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--primary)}
+
+/* alur */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;counter-reset:s}
+.steps li{counter-increment:s;position:relative;padding:0 22px 8px 0}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:44px;height:44px;border-radius:50%;
+  background:var(--primary);color:var(--primary-ink);font-family:var(--head);font-weight:700;font-size:1.4rem;position:relative;z-index:1}
+.steps li::after{content:"";position:absolute;left:44px;right:0;top:21px;height:4px;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 14px,transparent 14px 24px)}
+.steps li:last-child::after{display:none}
+.steps h3{margin:14px 0 6px}
+.steps p{color:var(--muted);font-size:.98rem}
+
+/* berkas */
+.docs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 44px}
+.doc{padding:14px 0;border-bottom:1px solid var(--line)}
+.doc h3{color:var(--primary);margin-bottom:4px}
+.doc ul{margin:0;padding-left:1.1em;font-size:.97rem}
+.doc li{margin:2px 0}
+
+.q{list-style:none;margin:0;padding:0;counter-reset:q;display:grid;gap:0}
+.q li{counter-increment:q;display:grid;grid-template-columns:2.2em 1fr;padding:12px 0;border-bottom:1px solid var(--line)}
+.q li::before{content:counter(q);font-family:var(--head);font-weight:700;font-size:1.5rem;color:var(--accent-ink);line-height:1.2}
+
+/* navigasi */
+.nav{flex:none;display:flex;align-items:center;gap:10px;padding:8px clamp(12px,3vw,28px);
+  background:var(--surface);border-top:1px solid var(--line)}
+.nav button{border:1px solid var(--line);background:var(--bg);padding:8px 14px;border-radius:4px;cursor:pointer;
+  font-weight:500;min-height:42px}
+.nav button:hover{background:var(--surface2)}
+.nav .count{margin:0 auto;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.95rem}
+.nav .progress{position:absolute;left:0;bottom:100%;height:3px;background:var(--accent);width:0;transition:width .25s}
+.nav{position:relative}
+.nav .lbl{display:inline}
+
+
+/* jadwal */
+.kv{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(24px,4vw,52px);align-items:start}
+.asumsi{list-style:none;margin:0;padding:0}
+.asumsi li{padding:10px 0 10px 18px;border-bottom:1px solid var(--line);position:relative}
+.asumsi li::before{content:"";position:absolute;left:0;top:19px;width:8px;height:8px;background:var(--accent);border-radius:1px}
+table.jd{width:100%;border-collapse:collapse;font-size:.93rem}
+table.jd th{font-family:var(--head);font-weight:600;font-size:1.05rem;text-align:left;padding:7px 10px;border-bottom:3px solid var(--primary)}
+table.jd td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.jd .c{text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.jd th.c{text-align:center}
+table.jd .by{display:block;color:var(--muted);font-size:.82rem}
+table.jd tr.win td{font-weight:600;background:var(--accent-soft);color:var(--ink);border-bottom:0}
+table.jd tr.tot td{font-weight:600;border-top:3px solid var(--primary);border-bottom:0}
+.kel p{margin:0 0 6px;max-width:none}
+.kk{display:inline-block;font-family:var(--head);font-weight:700;font-size:.98rem;padding:0 9px;border-radius:3px;margin-right:6px}
+.k-besar{background:var(--primary);color:var(--primary-ink)}
+.k-reguler{background:var(--surface2);color:var(--ink)}
+.sched-wrap{overflow-x:auto;margin-top:14px}
+.gantt{--gl:minmax(240px,310px);overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+.gg{display:grid;min-width:720px}
+.gh{font-size:.78rem;color:var(--muted);text-align:center;padding:6px 0;border-bottom:2px solid var(--line);line-height:1.15}
+.gh b{display:block;font-family:var(--head);font-size:1.05rem;color:var(--ink)}
+.gh.gl{text-align:left;padding-left:12px;font-family:var(--head);font-size:1rem;font-weight:600;color:var(--ink)}
+.gl{grid-column:1;grid-row:1;position:sticky;left:0;z-index:2;background:var(--surface);padding:4px 10px 4px 12px;min-width:0;border-right:1px solid var(--line)}
+.gn{display:block;font-size:.85rem;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm{display:block;font-size:.75rem;line-height:1.3;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gc{border-left:1px dashed var(--line);border-bottom:1px solid var(--line)}
+.gc.wk{border-left:2px solid var(--line)}
+.gb{align-self:center;height:16px;margin:0 1px;border-radius:2px;z-index:1}
+.f-persiapan{background:var(--fprep)}
+.f-penawaran{background:var(--accent)}
+.f-evaluasi{background:var(--primary)}
+.f-penetapan{background:var(--ink);height:22px}
+.gsep{grid-column:1 / -1;font-family:var(--head);font-weight:600;font-size:.95rem;padding:3px 12px;background:var(--surface2);position:sticky;left:0}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:12px;font-size:.9rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:22px;height:12px;border-radius:2px}
+@media (max-width:700px){.kv{grid-template-columns:1fr}.gantt{--gl:170px}.gn{font-size:.8rem}table.jd{font-size:.86rem}}
+@media (max-width:700px){
+  body{font-size:16px}
+  .two{grid-template-columns:1fr}
+  .nav .lbl{display:none}
+  .nav button{padding:8px 16px}
+  table.pk thead{display:none}
+  table.pk,table.pk tbody,table.pk tr,table.pk td{display:block;width:100%}
+  table.pk tr{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:10px 12px;margin-bottom:10px}
+  table.pk td{display:flex;justify-content:space-between;gap:14px;text-align:right;border:0;padding:3px 0}
+  table.pk td::before{content:attr(data-label);color:var(--muted);font-size:.82rem;text-align:left;flex:none;padding-top:2px}
+  table.pk td.nama{display:block;text-align:left;font-weight:600;padding-bottom:6px}
+  table.pk td.nama::before{display:none}
+  table.pk tr.total{background:var(--surface2);border-color:var(--primary)}
+  .steps li::after{display:none}
+  .steps li{padding-bottom:18px}
+}
+@media (prefers-reduced-motion:reduce){.slide,.nav .progress{transition:none}}
+@media print{
+  @page{size:A4 landscape;margin:12mm}
+  html,body{height:auto;display:block;background:#fff}
+  :root{padding:0}
+  .deck{overflow:visible}
+  .slide{position:static;opacity:1;visibility:visible;overflow:visible;page-break-after:always;min-height:170mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .nav{display:none}
+}
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+
+  <!-- SLIDE 1: Judul -->
+  <section class="slide title" aria-label="Judul">
+    <div class="inner">
+      <h1>Paket Bina Marga 2026 dengan metode mini kompetisi </h1>
+      <p class="sub">Bahan pendampingan akun e-Audit bersama tim Inspektorat Daerah</p>
+      <div class="roadline" aria-hidden="true"></div>
+      <p class="who"><b>Bidang Bina Marga</b><br>Dinas Pekerjaan Umum dan Perumahan Rakyat Kabupaten Karanganyar</p>
+      <span class="draft">Sebagai bahan diskusi</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: Latar belakang (rekomendasi KPK) -->
+  <section class="slide" aria-label="Latar belakang">
+    <div class="inner">
+      <h2>Rekomendasi KPK yang menjadi dasar pendampingan</h2>
+      <div class="rule"></div>
+      <div class="two">
+        <div>
+          <p class="lead">Surat KPK B/3469/KSP.00/70-74/06/2026 tanggal 10 Juni 2026 menindaklanjuti rapat koordinasi pencegahan korupsi Pemkab Karanganyar pada 20 Mei 2026.</p>
+          <p class="muted">Dari 19 rekomendasi dalam notulensi, enam menyentuh langsung pengadaan paket jalan. Poin 17 meminta Inspektorat me-review e-purchasing memakai akun e-Audit.</p>
+        </div>
+        <ul class="points">
+          <li><span class="tag">Poin 12</span><span>Mencegah fraud dan konflik kepentingan pada pengadaan langsung, e-purchasing, dan tender.</span></li>
+          <li><span class="tag">Poin 15</span><span>UKPBJ memastikan jadwal dan rentang waktu tahapan pemilihan penyedia sesuai aturan.</span></li>
+          <li><span class="tag">Poin 16</span><span>Inspektorat melakukan probity audit dan pengawasan atas proyek strategis.</span></li>
+          <li><span class="tag">Poin 17</span><span>Inspektorat me-review pengadaan melalui e-purchasing dengan akun e-Audit.</span></li>
+          <li><span class="tag">Poin 18</span><span>Tidak ada intervensi dari siapa pun terhadap proses pengadaan.</span></li>
+          <li><span class="tag">Poin 19</span><span>Konsolidasi pengadaan langsung sesuai Surat KPK B1996/KSP.00/70-74/03/2025.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: Cakupan (angka ringkas dihitung otomatis dari data P) -->
+  <section class="slide" aria-label="Cakupan paparan">
+    <div class="inner">
+      <h2>Cakupan: 10 paket senilai Rp34,08 miliar</h2>
+      <div class="rule"></div>
+      <div class="stats">
+        <div class="stat"><div class="n">10</div><div class="t">paket kegiatan yang dipaparkan</div></div>
+        <div class="stat"><div class="n" id="statTotal">Rp34,08 M</div><div class="t">total pagu APBD Penetapan 2026</div></div>
+        <div class="stat"><div class="n" id="statShare">93,4%</div><div class="t">dari pagu seluruh 17 paket Bina Marga (Rp36,47 M)</div></div>
+      </div>
+      <div class="note">
+        <p><b>Kriteria pemilihan:</b> metode pengadaan mini kompetisi, atau pagu di atas Rp400 juta.</p>
+        <p>Kesepuluh paket bermetode mini kompetisi dan bernilai Rp600 juta sampai Rp6 miliar. Tujuh paket e-PL lainnya bernilai Rp245 juta sampai Rp400 juta, sehingga tidak masuk cakupan.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: Daftar paket (baris tabel dibuat otomatis dari data P) -->
+  <section class="slide" aria-label="Daftar paket">
+    <div class="inner">
+      <h2>Daftar 10 paket kegiatan</h2>
+      <div class="rule" style="margin-bottom:8px"></div>
+      <p class="muted" style="margin:0">Nomor urut mengikuti Daftar Kegiatan Bina Marga 2026. Pagu adalah pagu APBD Penetapan.</p>
+      <div class="tablewrap">
+        <table class="pk">
+          <thead><tr><th>No</th><th>Ruas</th><th>Paket pekerjaan</th><th>Sumber dana</th><th>Lokasi</th><th class="num">Pagu</th><th>Metode</th></tr></thead>
+          <tbody id="pkBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: Komposisi pagu (grafik dibuat otomatis dari data P) -->
+  <section class="slide" aria-label="Komposisi pagu">
+    <div class="inner">
+      <h2>Komposisi pagu dari 10 paket</h2>
+      <div class="rule"></div>
+      <p class="lead">Sekitar 63% pagu berasal dari DAU, dan hampir separuhnya (48%) ada pada tiga paket berukuran Rp5 miliar ke atas.</p>
+      <div class="groups" id="groups"></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: Ketentuan Perlem LKPP 2/2026 -->
+  <section class="slide" aria-label="Dasar aturan">
+    <div class="inner">
+      <h2>Ketentuan mini kompetisi dalam Perlem LKPP 2/2026</h2>
+      <div class="rule"></div>
+      <ul class="points">
+        <li><span class="tag pasal">Pasal 12</span><span>E-purchasing wajib bila barang/jasa tersedia di katalog. Pengecualian dinilai PPK lewat analisa pasar: ketersediaan, volume dan spesifikasi, kesanggupan penyedia, kesesuaian kategori, serta perbandingan harga dengan barang sejenis di luar katalog.</span></li>
+        <li><span class="tag pasal">Pasal 13</span><span>PPK menetapkan HPS untuk e-purchasing bernilai di atas Rp100 juta.</span></li>
+        <li><span class="tag pasal">Pasal 14 dan 17</span><span>Mini kompetisi diikuti paling sedikit dua Penyedia Katalog dengan produk atau spesifikasi sama. Di atas Rp200 juta dilaksanakan Pokja Pemilihan lewat permintaan PPK ke UKPBJ.</span></li>
+        <li><span class="tag pasal">Pasal 18</span><span>Pada pekerjaan konstruksi, pelaku usaha lokal diutamakan.</span></li>
+        <li><span class="tag pasal">Pasal 19 dan 20</span><span>Surat/Bukti Pesanan ditandatangani elektronik lewat sistem katalog. Jaminan pelaksanaan berlaku untuk kontrak di atas Rp200 juta.</span></li>
+        <li><span class="tag pasal">Pasal 22 sampai 25</span><span>Berlaku sejak diundangkan pada 1 September 2026. E-purchasing yang sudah berjalan sebelum itu dilanjutkan dengan Perlem 9/2021.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: Asumsi jadwal (tabel durasi dibuat otomatis dari daftar TAHAP) -->
+  <section class="slide" aria-label="Asumsi jadwal">
+    <div class="inner">
+      <h2>Jadwal mini kompetisi: dasar perhitungan</h2>
+      <div class="rule"></div>
+      <div class="kv">
+        <div>
+          <p class="lead">Perlem LKPP 2/2026 tidak mengatur durasi tiap tahapan. Jadwal ini estimasi, dihitung sampai penetapan pemenang.</p>
+          <ul class="asumsi">
+            <li>Semua paket bernilai di atas Rp200 juta, sehingga mini kompetisi dilaksanakan Pokja Pemilihan atas permintaan PPK ke UKPBJ (Pasal 14 ayat 3 dan Pasal 17 ayat 2).</li>
+            <li>Dihitung dalam hari kerja, Senin sampai Jumat. Oktober 2026 tidak ada libur nasional.</li>
+            <li>Tanpa masa sanggah, sesuai mekanisme e-purchasing.</li>
+            <li>Dokumen persiapan dari PPK sudah lengkap saat diserahkan ke UKPBJ.</li>
+            <li>Paket besar (Rp4,9 miliar sampai Rp6 miliar) mendapat tambahan 1 hari kerja pada pemasukan penawaran dan pada evaluasi.</li>
+          </ul>
+        </div>
+        <div class="sched-wrap" style="margin-top:0"><table class="jd" id="durasiTbl" style="font-size:.88rem"></table><p class="muted" style="font-size:.85rem;margin-top:8px">Penjelasan dan awal pemasukan penawaran berlangsung pada hari yang sama.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: Gantt 10 paket (dibuat otomatis dari data P dan TAHAP) -->
+  <section class="slide" aria-label="Jadwal seluruh paket">
+    <div class="inner">
+      <h2>Jadwal 10 paket sampai penetapan pemenang</h2>
+      <div class="rule" style="margin-bottom:10px"></div>
+      <p class="lead" id="ganttLead" style="margin:0"></p>
+      <div class="gantt" id="gantt"></div>
+      <div class="legend">
+        <span><i class="f-persiapan"></i>Persiapan di UKPBJ dan Pokja</span>
+        <span><i class="f-penawaran"></i>Penjelasan dan pemasukan penawaran</span>
+        <span><i class="f-evaluasi"></i>Evaluasi, klarifikasi, negosiasi</span>
+        <span><i class="f-penetapan"></i>Penetapan pemenang</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: Rincian kelompok 1 (isi dibuat otomatis; ubah data-mulai bila tanggal berubah) -->
+  <section class="slide" aria-label="Rincian jadwal kelompok 1">
+    <div class="inner"><div class="jadwal-kelompok" data-kelompok="1" data-mulai="2026-10-01"></div></div>
+  </section>
+
+  <!-- SLIDE 10: Rincian kelompok 2 -->
+  <section class="slide" aria-label="Rincian jadwal kelompok 2">
+    <div class="inner"><div class="jadwal-kelompok" data-kelompok="2" data-mulai="2026-10-05"></div></div>
+  </section>
+
+  <!-- SLIDE 11: Usulan alur pendampingan -->
+  <section class="slide" aria-label="Alur pendampingan">
+    <div class="inner">
+      <h2>Usulan alur pendampingan akun e-Audit</h2>
+      <div class="rule"></div>
+      <p class="lead" style="margin-bottom:30px">Empat langkah, dijalankan per paket dengan urutan dari pagu terbesar.</p>
+      <ol class="steps">
+        <li><h3>Samakan data</h3><p>Bina Marga menyerahkan rekap 10 paket: metode, pagu, sumber dana, dan tahap pengadaan saat ini.</p></li>
+        <li><h3>Cocokkan dengan sistem</h3><p>Setiap paket dicocokkan dengan transaksi dan riwayatnya di katalog dan akun e-Audit.</p></li>
+        <li><h3>Telusuri berkas</h3><p>PPK dan Pokja menunjukkan berkas pendukung sesuai daftar.</p></li>
+        <li><h3>Catat dan tindak lanjuti</h3><p>Catatan Inspektorat disepakati bersama, lengkap dengan penanggung jawab dan tenggat perbaikan.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: Berkas per paket -->
+  <section class="slide" aria-label="Berkas per paket">
+    <div class="inner">
+      <h2>Berkas yang disiapkan untuk setiap paket</h2>
+      <div class="rule"></div>
+      <div class="docs">
+        <div class="doc"><h3>Penentuan e-purchasing</h3><ul>
+          <li>Hasil cek ketersediaan di katalog</li>
+          <li>Bila dikecualikan: penilaian PPK dan analisa pasar</li></ul></div>
+        <div class="doc"><h3>Harga</h3><ul>
+          <li>HPS yang ditetapkan PPK</li>
+          <li>Dasar perhitungan harga satuan</li></ul></div>
+        <div class="doc"><h3>Metode dan pelaksana</h3><ul>
+          <li>Catatan pertimbangan pemilihan metode</li>
+          <li>Permintaan PPK ke UKPBJ</li>
+          <li>Bukti minimal dua Penyedia Katalog</li>
+          <li>Riwayat mini kompetisi atau negosiasi</li></ul></div>
+        <div class="doc"><h3>Khusus konstruksi</h3><ul>
+          <li>Bukti pengutamaan pelaku usaha lokal</li></ul></div>
+        <div class="doc"><h3>Kontrak dan jaminan</h3><ul>
+          <li>Surat/Bukti Pesanan elektronik</li>
+          <li>Jaminan pelaksanaan untuk kontrak di atas Rp200 juta</li></ul></div>
+        <div class="doc"><h3>Praktik baik pencegahan</h3><ul>
+          <li>Pernyataan bebas konflik kepentingan</li>
+          <li>Catatan komunikasi resmi dengan penyedia</li>
+          <li>Bukti pengecekan konsolidasi (Surat KPK B1996/2025)</li>
+          <li>Arsip tangkapan layar transaksi di sistem</li></ul></div>
+      </div>
+      <p class="muted" style="margin-top:14px">Praktik baik pada kelompok terakhir bukan kewajiban Perlem, tetapi menjawab poin 12, 17, dan 18 rekomendasi KPK.</p>
+    </div>
+  </section>
+
+
+  <!-- SLIDE 13: Daftar paket tambahan (sheet Perubahan; baris tabel dibuat otomatis dari data P2) -->
+  <section class="slide" aria-label="Daftar paket tambahan">
+    <div class="inner">
+      <h2>Paket tambahan dari daftar perubahan</h2>
+      <div class="rule" style="margin-bottom:8px"></div>
+      <p class="muted" id="pk2Lead" style="margin:0"></p>
+      <div class="tablewrap">
+        <table class="pk">
+          <thead><tr><th>No</th><th>Ruas</th><th>Paket pekerjaan</th><th>Sumber dana</th><th>Lokasi</th><th class="num">Pagu</th><th>Metode</th></tr></thead>
+          <tbody id="pk2Body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 14: Gantt paket tambahan (dibuat otomatis dari data P2 dan TAHAP) -->
+  <section class="slide" aria-label="Jadwal paket tambahan">
+    <div class="inner">
+      <h2>Jadwal 5 paket tambahan sampai penetapan pemenang</h2>
+      <div class="rule" style="margin-bottom:10px"></div>
+      <p class="lead" id="gantt2Lead" style="margin:0"></p>
+      <div class="gantt" id="gantt2"></div>
+      <div class="legend">
+        <span><i class="f-persiapan"></i>Persiapan di UKPBJ dan Pokja</span>
+        <span><i class="f-penawaran"></i>Penjelasan dan pemasukan penawaran</span>
+        <span><i class="f-evaluasi"></i>Evaluasi, klarifikasi, negosiasi</span>
+        <span><i class="f-penetapan"></i>Penetapan pemenang</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 15: Rincian jadwal paket tambahan (ubah data-mulai bila tanggal masuk UKPBJ berubah) -->
+  <section class="slide" aria-label="Rincian jadwal paket tambahan">
+    <div class="inner"><div class="jadwal-kelompok" data-sumber="P2" data-kelompok="3" data-judul="Rincian jadwal paket tambahan" data-mulai="2026-10-12"></div></div>
+  </section>
+
+</main>
+
+<nav class="nav" aria-label="Navigasi slide">
+  <div class="progress" id="progress"></div>
+  <button id="prev" type="button" aria-label="Slide sebelumnya">&larr; <span class="lbl">Sebelumnya</span></button>
+  <span class="count" id="count" aria-live="polite">1 / 8</span>
+  <button id="theme" type="button" aria-label="Ganti tema terang atau gelap">Tema</button>
+  <button id="next" type="button" aria-label="Slide berikutnya"><span class="lbl">Berikutnya</span> &rarr;</button>
+</nav>
+
+<script>
+(function(){
+  // DATA PAKET: edit di sini. Kolom ruas boleh dikosongkan (''). Pagu dalam rupiah, tanpa titik.
+  // mulai = tanggal paket masuk UKPBJ (YYYY-MM-DD). kelas = 'reguler' atau 'besar' (menentukan durasi tahapan jadwal).
+  var P=[
+    {no:1,ruas:'185',nama:'Pelebaran Jalan Jumapolo - Jumantono',dana:'DAU',lok:'Jumapolo/Jumantono',pagu:5337747300,jenis:'Pelebaran',mulai:'2026-10-01',kelas:'besar'},
+    {no:2,ruas:'141',nama:'Rehabilitasi Jalan Matesih - Tegalgede',dana:'DAU',lok:'Matesih/Karanganyar',pagu:4935000000,jenis:'Rehabilitasi dan rekonstruksi',mulai:'2026-10-01',kelas:'besar'},
+    {no:3,ruas:'202',nama:'Pelebaran Jalan Gedong - Kebonagung',dana:'DAU',lok:'Tasikmadu',pagu:2660000000,jenis:'Pelebaran',mulai:'2026-10-01',kelas:'reguler'},
+    {no:4,ruas:'183',nama:'Pelebaran Jalan Kebak - Punthuk',dana:'DAU',lok:'Jumantono',pagu:2040000000,jenis:'Pelebaran',mulai:'2026-10-05',kelas:'reguler'},
+    {no:5,ruas:'126',nama:'Pemeliharaan Berkala Jalan Matesih - Tawangmangu',dana:'DAU',lok:'Matesih/Tawangmangu',pagu:4935000000,jenis:'Pemeliharaan berkala',mulai:'2026-10-05',kelas:'besar'},
+    {no:10,ruas:'34',nama:'Pemeliharaan Berkala Jalan Mipidan',dana:'DAU',lok:'Gondangrejo',pagu:600000000,jenis:'Pemeliharaan berkala',mulai:'2026-10-05',kelas:'reguler'},
+    {no:12,ruas:'13',nama:'Pemeliharaan Berkala Jalan Baturan - Klodran',dana:'DAU',lok:'Colomadu',pagu:960000000,jenis:'Pemeliharaan berkala',mulai:'2026-10-05',kelas:'reguler'},
+    {no:13,ruas:'176',nama:'Pelebaran Jalan Gembong - Blorong',dana:'Banprov',lok:'Jumantono',pagu:5000000000,jenis:'Pelebaran',mulai:'2026-10-05',kelas:'besar'},
+    {no:14,ruas:'88',nama:'Rekonstruksi Jalan Srandon - Puntukrejo',dana:'Banprov',lok:'Karangpandan',pagu:6000000000,jenis:'Rehabilitasi dan rekonstruksi',mulai:'2026-10-05',kelas:'besar'},
+    {no:17,ruas:'',nama:'Pembangunan Jalan menuju Kebon 9 - 11 Gumeng',dana:'Belanja barang untuk diserahkan kepada masyarakat',lok:'Jenawi',pagu:1610000000,jenis:'Pembangunan jalan baru',mulai:'2026-10-01',kelas:'reguler'}
+  ];
+  var TOTAL_ALL=36472747300;
+  // DATA PAKET TAMBAHAN (sheet Perubahan): edit di sini, format sama dengan data P.
+  var P2=[
+    {no:1,ruas:'221',nama:'Rehabilitasi Jalan Kapten Mulyadi',dana:'PKB',lok:'Karanganyar',pagu:3620000000,jenis:'Rehabilitasi dan rekonstruksi',mulai:'2026-10-12',kelas:'reguler'},
+    {no:2,ruas:'47',nama:'Rekonstruksi Jalan Lingkar Terminal Palur',dana:'PKB',lok:'Jaten',pagu:3540000000,jenis:'Rehabilitasi dan rekonstruksi',mulai:'2026-10-12',kelas:'reguler'},
+    {no:3,ruas:'204',nama:'Rekonstruksi Jalan Wagal - Wonolopo',dana:'PKB',lok:'Tasikmadu',pagu:622000000,jenis:'Rehabilitasi dan rekonstruksi',mulai:'2026-10-12',kelas:'reguler'},
+    {no:4,ruas:'203',nama:'Rekonstruksi Jalan Geneng - Wagal',dana:'PKB',lok:'Tasikmadu',pagu:822000000,jenis:'Rehabilitasi dan rekonstruksi',mulai:'2026-10-12',kelas:'reguler'},
+    {no:5,ruas:'117',nama:'Peningkatan Jalan Sambang Dalan - Berjo',dana:'DAU',lok:'Ngargoyoso',pagu:2990000000,jenis:'Peningkatan',mulai:'2026-10-12',kelas:'reguler'}
+  ];
+
+  function rp(v){return 'Rp'+v.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+  function m(v){return 'Rp'+(Math.round(v/1e7)/100).toFixed(2).replace('.',',')+' M';}
+  function pct(v,t){return (v/t*100).toFixed(1).replace('.',',')+'%';}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  var total=P.reduce(function(a,p){return a+p.pagu;},0);
+  document.getElementById('statTotal').textContent=m(total);
+  document.getElementById('statShare').textContent=pct(total,TOTAL_ALL);
+
+  // tabel
+  var rows=P.map(function(p){
+    var plate=p.ruas?'<span class="plate">'+esc(p.ruas)+'</span>':'<span class="plate none">-</span>';
+    return '<tr><td data-label="No">'+p.no+'</td><td data-label="Ruas">'+plate+'</td>'+
+      '<td class="nama">'+esc(p.nama)+'</td><td data-label="Sumber dana">'+esc(p.dana)+'</td>'+
+      '<td data-label="Lokasi">'+esc(p.lok)+'</td><td class="num" data-label="Pagu">'+rp(p.pagu)+'</td>'+
+      '<td data-label="Metode"><span class="chip">Mini kompetisi/tender</span></td></tr>';
+  }).join('');
+  rows+='<tr class="total"><td data-label="No"></td><td data-label="Ruas"></td><td class="nama">Total 10 paket</td><td data-label="Sumber dana"></td><td data-label="Lokasi"></td><td class="num" data-label="Pagu">'+rp(total)+'</td><td data-label="Metode"></td></tr>';
+  document.getElementById('pkBody').innerHTML=rows;
+
+  // tabel paket tambahan
+  (function(){
+    var t2=P2.reduce(function(a,p){return a+p.pagu;},0);
+    var h=P2.map(function(p){
+      var plate=p.ruas?'<span class="plate">'+esc(p.ruas)+'</span>':'<span class="plate none">-</span>';
+      return '<tr><td data-label="No">'+p.no+'</td><td data-label="Ruas">'+plate+'</td>'+
+        '<td class="nama">'+esc(p.nama)+'</td><td data-label="Sumber dana">'+esc(p.dana)+'</td>'+
+        '<td data-label="Lokasi">'+esc(p.lok)+'</td><td class="num" data-label="Pagu">'+rp(p.pagu)+'</td>'+
+        '<td data-label="Metode"><span class="chip">Mini kompetisi/tender</span></td></tr>';
+    }).join('');
+    h+='<tr class="total"><td data-label="No"></td><td data-label="Ruas"></td><td class="nama">Total '+P2.length+' paket</td><td data-label="Sumber dana"></td><td data-label="Lokasi"></td><td class="num" data-label="Pagu">'+rp(t2)+'</td><td data-label="Metode"></td></tr>';
+    document.getElementById('pk2Body').innerHTML=h;
+    document.getElementById('pk2Lead').textContent=P2.length+' paket senilai '+m(t2)+', seluruhnya direncanakan dengan mini kompetisi. Bersama 10 paket sebelumnya, total menjadi '+(P.length+P2.length)+' paket senilai '+m(total+t2)+'.';
+  })();
+
+  // batang
+  function group(title,items){
+    var max=Math.max.apply(null,items.map(function(i){return i.v;}));
+    var h='<div class="group"><h3>'+title+'</h3>';
+    items.forEach(function(i){
+      h+='<div class="brow"><div>'+esc(i.l)+'</div><div class="val">'+m(i.v)+' ('+pct(i.v,total)+')</div>'+
+         '<div class="bar"><i style="width:'+(i.v/max*100).toFixed(1)+'%"></i></div></div>';
+    });
+    return h+'</div>';
+  }
+  function sumBy(fn){var o={},order=[];P.forEach(function(p){var k=fn(p);if(!(k in o)){o[k]=0;order.push(k);}o[k]+=p.pagu;});return order.map(function(k){return{k:k,v:o[k]};});}
+  function count(fn,key){return P.filter(function(p){return fn(p)===key;}).length;}
+
+  var fDana=function(p){return p.dana==='DAU'?'Dana Alokasi Umum':(p.dana==='Banprov'?'Bantuan Provinsi':'Belanja barang untuk diserahkan');};
+  var fJenis=function(p){return p.jenis;};
+  var fBand=function(p){return p.pagu>=5e9?'Rp5 miliar ke atas':(p.pagu>=2e9?'Rp2 miliar sampai di bawah Rp5 miliar':'Di bawah Rp2 miliar');};
+
+  function toItems(fn){return sumBy(fn).map(function(s){return{l:s.k+', '+count(fn,s.k)+' paket',v:s.v};});}
+  document.getElementById('groups').innerHTML=
+    group('Sumber dana',toItems(fDana))+
+    group('Jenis pekerjaan',toItems(fJenis))+
+    group('Ukuran paket',toItems(fBand));
+
+  // ===== JADWAL MINI KOMPETISI =====
+  // LIBUR: libur nasional atau cuti bersama (format 'YYYY-MM-DD'), tidak dihitung sebagai hari kerja.
+  var LIBUR=[];
+  // TAHAP: durasi dalam hari kerja untuk paket reguler dan besar.
+  // fase menentukan warna di Gantt. sejak:'hariSebelumnya' = tahap dimulai pada hari terakhir tahap sebelumnya.
+  var TAHAP=[
+    {nama:'Permintaan e-purchasing dan dokumen persiapan dari PPK diterima UKPBJ',oleh:'PPK, UKPBJ',fase:'persiapan',reguler:1,besar:1},
+    {nama:'Penugasan Pokja Pemilihan',oleh:'Kepala UKPBJ',fase:'persiapan',reguler:1,besar:1},
+    {nama:'Reviu dokumen persiapan (spesifikasi, HPS, rancangan kontrak), dengan berita acara',oleh:'Pokja bersama PPK',fase:'persiapan',reguler:2,besar:2},
+    {nama:'Dokumen mini kompetisi, pembuatan paket di sistem, penetapan minimal 2 penyedia katalog yang diundang (utamakan penyedia lokal)',oleh:'Pokja',fase:'persiapan',reguler:1,besar:1},
+    {nama:'Undangan kepada penyedia katalog',oleh:'Pokja',fase:'persiapan',reguler:1,besar:1},
+    {nama:'Penjelasan secara daring',oleh:'Pokja dan penyedia',fase:'penawaran',reguler:1,besar:1},
+    {nama:'Pemasukan penawaran',oleh:'Penyedia',fase:'penawaran',reguler:3,besar:4,sejak:'hariSebelumnya'},
+    {nama:'Pembukaan dan evaluasi penawaran (administrasi, teknis, harga)',oleh:'Pokja',fase:'evaluasi',reguler:2,besar:3},
+    {nama:'Klarifikasi dan negosiasi, bila perlu',oleh:'Pokja dan penyedia',fase:'evaluasi',reguler:1,besar:1},
+    {nama:'Penetapan dan pengumuman pemenang',oleh:'Pokja',fase:'penetapan',reguler:1,besar:1}
+  ];
+  var KELAS={reguler:'Reguler',besar:'Besar'}, URUT_KELAS=['reguler','besar'];
+  var BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  var BLS=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  var HR=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'], HRS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+  function pd(x){var a=x.split('-');return new Date(Date.UTC(+a[0],a[1]-1,+a[2]));}
+  function ymd(d){return d.toISOString().slice(0,10);}
+  function isKerja(d){var w=d.getUTCDay();return w!==0&&w!==6&&LIBUR.indexOf(ymd(d))<0;}
+  function nextKerja(d){var x=new Date(d.getTime());do{x.setUTCDate(x.getUTCDate()+1);}while(!isKerja(x));return x;}
+  function firstKerja(d){var x=new Date(d.getTime());while(!isKerja(x))x.setUTCDate(x.getUTCDate()+1);return x;}
+  function tglPanjang(d){return HR[d.getUTCDay()]+', '+d.getUTCDate()+' '+BLN[d.getUTCMonth()]+' '+d.getUTCFullYear();}
+  function tglPendek(d){return d.getUTCDate()+' '+BLS[d.getUTCMonth()];}
+  function rentang(a,b){
+    if(ymd(a)===ymd(b))return tglPendek(a);
+    if(a.getUTCMonth()===b.getUTCMonth())return a.getUTCDate()+'–'+tglPendek(b);
+    return tglPendek(a)+'–'+tglPendek(b);
+  }
+  function jadwal(mulai,kelas){
+    var out=[];
+    TAHAP.forEach(function(t,i){
+      var dur=Math.max(1,t[kelas]||1),st;
+      if(i===0)st=firstKerja(pd(mulai));
+      else if(t.sejak==='hariSebelumnya')st=out[i-1].akhir;
+      else st=nextKerja(out[i-1].akhir);
+      var en=st;for(var k=1;k<dur;k++)en=nextKerja(en);
+      out.push({t:t,mulai:st,akhir:en});
+    });
+    return out;
+  }
+  function totalHK(kelas){return TAHAP.reduce(function(a,t){return a+Math.max(1,t[kelas]||1)-(t.sejak==='hariSebelumnya'?1:0);},0);}
+
+  var PJ=P.map(function(p){return{p:p,j:jadwal(p.mulai,p.kelas)};})
+    .sort(function(a,b){return a.p.mulai<b.p.mulai?-1:(a.p.mulai>b.p.mulai?1:b.p.pagu-a.p.pagu);});
+  var PJ2=P2.map(function(p){return{p:p,j:jadwal(p.mulai,p.kelas)};})
+    .sort(function(a,b){return a.p.mulai<b.p.mulai?-1:(a.p.mulai>b.p.mulai?1:b.p.pagu-a.p.pagu);});
+  var SUMBER={P:PJ,P2:PJ2};
+
+  // tabel durasi
+  (function(){
+    var h='<thead><tr><th>Tahapan</th><th class="c">Reguler</th><th class="c">Besar</th></tr></thead><tbody>';
+    TAHAP.forEach(function(t){h+='<tr><td>'+esc(t.nama)+'</td><td class="c">'+t.reguler+' HK</td><td class="c">'+t.besar+' HK</td></tr>';});
+    h+='<tr class="tot"><td>Total sampai penetapan pemenang</td><td class="c">'+totalHK('reguler')+' HK</td><td class="c">'+totalHK('besar')+' HK</td></tr></tbody>';
+    document.getElementById('durasiTbl').innerHTML=h;
+  })();
+
+  // Gantt
+  function renderGantt(PJ,gid,lid){
+    var d0=null,d1=null;
+    PJ.forEach(function(x){var a=x.j[0].mulai,b=x.j[x.j.length-1].akhir;if(!d0||a<d0)d0=a;if(!d1||b>d1)d1=b;});
+    var hari=[];for(var d=firstKerja(d0);d<=d1;d=nextKerja(d))hari.push(ymd(d));
+    function idx(d){return hari.indexOf(ymd(d));}
+    var cols='grid-template-columns:var(--gl) repeat('+hari.length+',minmax(30px,1fr))';
+    var h='<div class="gg" style="'+cols+'"><div class="gh gl" style="grid-row:1">'+BLN[d0.getUTCMonth()]+' '+d0.getUTCFullYear()+'</div>';
+    hari.forEach(function(x){var d=pd(x);h+='<div class="gh"><b>'+d.getUTCDate()+'</b>'+HRS[d.getUTCDay()]+'</div>';});
+    h+='</div>';
+    var grpNow=null,pemenang=[];
+    PJ.forEach(function(x){
+      if(x.p.mulai!==grpNow){grpNow=x.p.mulai;h+='<div class="gg" style="'+cols+'"><div class="gsep">Masuk UKPBJ '+tglPanjang(pd(grpNow))+'</div></div>';}
+      var win=x.j[x.j.length-1].akhir;pemenang.push(win);
+      h+='<div class="gg" style="'+cols+'"><div class="gl" title="'+esc(x.p.nama)+'"><span class="gn">'+esc(x.p.nama)+'</span><span class="gm">'+KELAS[x.p.kelas]+', '+m(x.p.pagu)+', pemenang '+tglPendek(win)+'</span></div>';
+      hari.forEach(function(s,i){var d=pd(s);h+='<div class="gc'+(d.getUTCDay()===1?' wk':'')+'" style="grid-column:'+(i+2)+';grid-row:1"></div>';});
+      var F={},order=[];
+      x.j.forEach(function(s){var f=s.t.fase;if(!F[f]){F[f]={a:s.mulai,b:s.akhir};order.push(f);}else{if(s.mulai<F[f].a)F[f].a=s.mulai;if(s.akhir>F[f].b)F[f].b=s.akhir;}});
+      order.forEach(function(f){var a=idx(F[f].a),b=idx(F[f].b);
+        h+='<div class="gb f-'+f+'" style="grid-column:'+(a+2)+' / '+(b+3)+';grid-row:1" title="'+esc(f+': '+rentang(F[f].a,F[f].b))+'"></div>';});
+      h+='</div>';
+    });
+    document.getElementById(gid).innerHTML=h;
+    pemenang.sort(function(a,b){return a-b;});
+    var awal=pemenang[0],akhir=pemenang[pemenang.length-1];
+    document.getElementById(lid).textContent='Penetapan pemenang diperkirakan '+(ymd(awal)===ymd(akhir)?tglPendek(awal):rentang(awal,akhir))+' '+akhir.getUTCFullYear()+'.';
+  }
+  renderGantt(PJ,'gantt','ganttLead');
+  renderGantt(PJ2,'gantt2','gantt2Lead');
+
+  // rincian per kelompok
+  [].forEach.call(document.querySelectorAll('.jadwal-kelompok'),function(el){
+    var tgl=el.getAttribute('data-mulai'),no=el.getAttribute('data-kelompok');
+    var PJ=SUMBER[el.getAttribute('data-sumber')||'P'];
+    var judul=el.getAttribute('data-judul')||('Rincian jadwal kelompok '+no);
+    var grp=PJ.filter(function(x){return x.p.mulai===tgl;});
+    var ada=URUT_KELAS.filter(function(k){return grp.some(function(x){return x.p.kelas===k;});});
+    var h='<h2>'+esc(judul)+'</h2><div class="rule" style="margin-bottom:10px"></div>';
+    h+='<p class="lead" style="margin-bottom:12px">Masuk UKPBJ '+tglPanjang(pd(tgl))+', '+grp.length+' paket.</p><div class="kel">';
+    if(!grp.length)h+='<p class="muted">Belum ada paket dengan tanggal masuk ini pada data P.</p>';
+    ada.forEach(function(k){
+      h+='<p><span class="kk k-'+k+'">'+KELAS[k]+'</span>'+grp.filter(function(x){return x.p.kelas===k;}).map(function(x){return esc(x.p.nama)+' ('+m(x.p.pagu)+')';}).join('; ')+'</p>';
+    });
+    h+='</div>';
+    if(grp.length){
+      var J={};ada.forEach(function(k){J[k]=jadwal(tgl,k);});
+      h+='<div class="sched-wrap"><table class="jd"><thead><tr><th>Tahapan</th>'+ada.map(function(k){return '<th class="c">'+KELAS[k]+'</th>';}).join('')+'</tr></thead><tbody>';
+      TAHAP.forEach(function(t,i){
+        var last=i===TAHAP.length-1;
+        h+='<tr'+(last?' class="win"':'')+'><td>'+esc(t.nama)+'<span class="by">'+esc(t.oleh)+'</span></td>'+
+          ada.map(function(k){var s=J[k][i];return '<td class="c">'+rentang(s.mulai,s.akhir)+'</td>';}).join('')+'</tr>';
+      });
+      h+='</tbody></table></div>';
+    }
+    el.innerHTML=h;
+  });
+
+  // navigasi
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var cur=0,count_el=document.getElementById('count'),prog=document.getElementById('progress');
+  function go(i){
+    cur=Math.max(0,Math.min(slides.length-1,i));
+    slides.forEach(function(s,k){s.classList.toggle('active',k===cur);s.setAttribute('aria-hidden',k===cur?'false':'true');});
+    slides[cur].scrollTop=0;
+    count_el.textContent=(cur+1)+' / '+slides.length;
+    prog.style.width=((cur+1)/slides.length*100)+'%';
+    document.getElementById('prev').disabled=cur===0;
+    document.getElementById('next').disabled=cur===slides.length-1;
+    document.getElementById('prev').style.opacity=cur===0?.4:1;
+    document.getElementById('next').style.opacity=cur===slides.length-1?.4:1;
+  }
+  document.getElementById('prev').addEventListener('click',function(){go(cur-1);});
+  document.getElementById('next').addEventListener('click',function(){go(cur+1);});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key==='PageDown'||(e.key===' '&&!e.shiftKey)){e.preventDefault();go(cur+1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'||(e.key===' '&&e.shiftKey)){e.preventDefault();go(cur-1);}
+    else if(e.key==='Home'){go(0);} else if(e.key==='End'){go(slides.length-1);}
+  });
+  var sx=0,sy=0;
+  document.getElementById('deck').addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  document.getElementById('deck').addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6){go(cur+(dx<0?1:-1));}
+  },{passive:true});
+
+  // tema
+  var root=document.documentElement;
+  document.getElementById('theme').addEventListener('click',function(){
+    var dark=root.getAttribute('data-theme')==='dark'||(!root.getAttribute('data-theme')&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme',dark?'light':'dark');
+  });
+
+  go(0);
+})();
+</script>
+</body>
+</html>
